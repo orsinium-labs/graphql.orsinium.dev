@@ -21,10 +21,11 @@ type Language struct {
 }
 
 type Projects struct {
-	path string
+	path  string
+	cache []Project
 }
 
-func (pr *Projects) Handler(params graphql.ResolveParams) (interface{}, error) {
+func (pr Projects) read() ([]Project, error) {
 	langs := []Language{}
 	file, err := ioutil.ReadFile(pr.path)
 	if err != nil {
@@ -44,6 +45,14 @@ func (pr *Projects) Handler(params graphql.ResolveParams) (interface{}, error) {
 	}
 
 	return result, nil
+}
+
+func (pr *Projects) Handle(params graphql.ResolveParams) (interface{}, error) {
+	var err error
+	if pr.cache == nil {
+		pr.cache, err = pr.read()
+	}
+	return pr.cache, err
 }
 
 func (pr *Projects) Field() graphql.Field {
@@ -70,6 +79,6 @@ func (pr *Projects) Field() graphql.Field {
 	return graphql.Field{
 		Type:        graphql.NewList(projectType),
 		Description: "Get open-source projects list",
-		Resolve:     pr.Handler,
+		Resolve:     pr.Handle,
 	}
 }
