@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"strings"
 
 	"github.com/graphql-go/graphql"
@@ -27,16 +28,34 @@ type Projects struct {
 }
 
 func (pr Projects) read() ([]Project, error) {
-	langs := []Language{}
-	file, err := ioutil.ReadFile(pr.path)
-	if err != nil {
-		return nil, fmt.Errorf("cannot read yaml file for projects: %w", err)
+	// read file
+	var content []byte
+	var err error
+	if strings.Contains(pr.path, "://") {
+		resp, err := http.Get(pr.path)
+		if err != nil {
+			return nil, fmt.Errorf("cannot get url for projects: %w", err)
+		}
+		defer resp.Body.Close()
+		content, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("cannot read remote content for projects: %w", err)
+		}
+	} else {
+		content, err = ioutil.ReadFile(pr.path)
+		if err != nil {
+			return nil, fmt.Errorf("cannot read yaml file for projects: %w", err)
+		}
 	}
-	err = yaml.Unmarshal(file, &langs)
+
+	// parse yaml file
+	langs := []Language{}
+	err = yaml.Unmarshal(content, &langs)
 	if err != nil {
 		return nil, fmt.Errorf("cannot parse yaml file for projects: %w", err)
 	}
 
+	// put langs into projects
 	result := make([]Project, 0)
 	for _, lang := range langs {
 		for _, project := range lang.Projects {
