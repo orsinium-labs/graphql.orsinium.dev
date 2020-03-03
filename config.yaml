@@ -1,0 +1,7 @@
+pretty: true
+graphiql: false
+playground: true
+host: localhost
+port: 1456
+root: Gram
+projects: https://raw.githubusercontent.com/orsinium/orsinium.dev/master/data/projects.yml

@@ -1,4 +1,4 @@
-module github.com/orsinium/api.orsinium.dev
+module github.com/orsinium/graphql.orsinium.dev
 
 go 1.13
 
