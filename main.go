@@ -20,6 +20,8 @@ type Config struct {
 	Port int
 
 	Root string
+
+	Projects string
 }
 
 func main() {
@@ -35,9 +37,10 @@ func main() {
 	}
 
 	// create graphql schema
-	fproject := ProjectField()
+	projects := Projects{path: config.Projects}
+	fprojects := projects.Field()
 	fields := graphql.Fields{
-		"projects": &fproject,
+		"projects": &fprojects,
 	}
 	root := graphql.ObjectConfig{Name: config.Root, Fields: fields}
 	schemaConfig := graphql.SchemaConfig{Query: graphql.NewObject(root)}
