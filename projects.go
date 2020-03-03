@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"strings"
 
 	"github.com/graphql-go/graphql"
 	"gopkg.in/yaml.v2"
@@ -48,10 +49,35 @@ func (pr Projects) read() ([]Project, error) {
 }
 
 func (pr *Projects) Handle(params graphql.ResolveParams) (interface{}, error) {
+	// read projects from yaml
 	var err error
 	if pr.cache == nil {
 		pr.cache, err = pr.read()
 	}
+
+	// filter projects by name
+	name, ok := params.Args["name"].(string)
+	if ok {
+		for _, project := range pr.cache {
+			if strings.EqualFold(project.Name, name) {
+				return []Project{project}, nil
+			}
+		}
+		return nil, nil
+	}
+
+	// filter projects by language
+	lang, ok := params.Args["language"].(string)
+	if ok {
+		result := make([]Project, 0)
+		for _, project := range pr.cache {
+			if strings.EqualFold(project.Language, lang) {
+				result = append(result, project)
+			}
+		}
+		return result, nil
+	}
+
 	return pr.cache, err
 }
 
@@ -75,10 +101,18 @@ func (pr *Projects) Field() graphql.Field {
 			},
 		},
 	)
-
+	args := graphql.FieldConfigArgument{
+		"name": &graphql.ArgumentConfig{
+			Type: graphql.String,
+		},
+		"language": &graphql.ArgumentConfig{
+			Type: graphql.String,
+		},
+	}
 	return graphql.Field{
 		Type:        graphql.NewList(projectType),
 		Description: "Get open-source projects list",
+		Args:        args,
 		Resolve:     pr.Handle,
 	}
 }
