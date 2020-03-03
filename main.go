@@ -8,6 +8,7 @@ import (
 
 	"github.com/graphql-go/graphql"
 	"github.com/graphql-go/handler"
+	"github.com/spf13/pflag"
 	"gopkg.in/yaml.v2"
 )
 
@@ -25,9 +26,12 @@ type Config struct {
 }
 
 func main() {
+	configPath := pflag.StringP("config", "c", "config.yaml", "path to config file")
+	pflag.Parse()
+
 	// read yaml config
 	config := Config{}
-	file, err := ioutil.ReadFile("config.yaml")
+	file, err := ioutil.ReadFile(*configPath)
 	if err != nil {
 		log.Fatalf("cannot read yaml config: %v", err)
 	}
